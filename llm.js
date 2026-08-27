@@ -55,7 +55,11 @@ function extractJson(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
-// Tries Gemini first; on 429/quota error (or if only NIM is configured), uses NIM.
+// Gemini is rate-limited (429) or temporarily overloaded (503): both are worth
+// retrying against NIM instead of failing outright.
+const FALLBACK_STATUSES = new Set([429, 503]);
+
+// Tries Gemini first; falls back to NIM on rate-limit/overload (or if only NIM is configured).
 async function callLLM(prompt, { geminiKey, nimKey }) {
   if (!geminiKey && !nimKey) throw new Error("No API keys configured. Open Setup to add one.");
 
@@ -63,8 +67,8 @@ async function callLLM(prompt, { geminiKey, nimKey }) {
     try {
       return extractJson(await callGemini(geminiKey, prompt));
     } catch (e) {
-      if (e.status !== 429 || !nimKey) throw e;
-      // 429 and a NIM key is available: fall back
+      if (!FALLBACK_STATUSES.has(e.status) || !nimKey) throw e;
+      // fall back to NIM
     }
   }
   return extractJson(await callNim(nimKey, prompt));
