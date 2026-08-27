@@ -113,15 +113,27 @@ locations, project names, tech stacks, skills, education, and contact info
 all stay exactly as given, untouched.
 
 Mirror the job posting's terminology where truthful. Rewrite each bullet
-(experience and project alike) to lead with a strong action verb, state the
-concrete contribution, and work in any existing metric naturally, as a
-normal sentence would, not a fill-in-the-blank template. Reuse existing
-numbers, never fabricate new ones. Vary sentence structure so they don't all
-read the same way — do not reuse the same connecting phrase (e.g. "as
-measured by") in more than one bullet; most shouldn't use it at all. Bad:
-"Reduced latency by 5x as measured by benchmark metrics by migrating
-routing." Good: "Cut inference latency 5x by migrating request routing to a
-distributed GPU compute network."
+(experience and project alike) using this formula: strong action verb +
+the specific tool/technology actually used, named explicitly + the concrete
+contribution + any existing metric worked in naturally, as a normal
+sentence would, not a fill-in-the-blank template. Reuse existing numbers,
+never fabricate new ones. Vary sentence structure so they don't all read
+the same way — do not reuse the same connecting phrase (e.g. "as measured
+by") in more than one bullet; most shouldn't use it at all. Bad: "Reduced
+latency by 5x as measured by benchmark metrics by migrating routing." Also
+bad (vague, no named tool, weak for ATS scanning): "Improved reporting
+processes." Good: "Cut inference latency 5x by migrating request routing
+to a distributed GPU compute network." Good (names the real tool): "Automated
+reporting using Power BI and SQL, reducing manual effort 8 hours/week."
+
+Real ATS systems score bullets mainly by keyword presence and context, not
+by tone — a tool sitting only in the skills list doesn't help a bullet
+that describes the work without naming it. So: if the resume's skills list
+or surrounding context shows a specific tool/technology was genuinely used
+for an achievement, and that bullet doesn't already name it, weave it in
+explicitly — especially when the job posting calls out that same
+tool/technology by name. This is about surfacing real tool usage that's
+currently implicit, not adding anything not already true.
 
 Write with confidence, not caution. Sound like a senior engineer describing
 their own work, not a note-taker cataloging tasks — favor the framing that
