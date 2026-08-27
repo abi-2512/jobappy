@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>JobAppy Setup</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px 60px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  p.sub { color: #666; margin-top: 0; }
+  section {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+  label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  .hint { color: #888; font-size: 12px; margin: -2px 0 8px; }
+  input, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  textarea { font-family: ui-monospace, monospace; min-height: 260px; resize: vertical; }
+  button {
+    margin-top: 18px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    background: #111;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #savedMsg { color: #1a7f37; font-size: 13px; margin-left: 12px; display: none; }
+  #jsonError { color: #c0392b; font-size: 12px; margin-top: 6px; display: none; }
+  a { color: #111; }
+</style>
+</head>
+<body>
+  <h1>JobAppy Setup</h1>
+  <p class="sub">Add your free API keys and your base resume once. Everything stays on this device.</p>
+
+  <section>
+    <label for="geminiKey">Gemini API key</label>
+    <p class="hint">Free tier at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>. Used first for each request.</p>
+    <input id="geminiKey" type="password" placeholder="AIza…" autocomplete="off" />
+  </section>
+
+  <section>
+    <label for="nimKey">NVIDIA NIM API key</label>
+    <p class="hint">Free tier at <a href="https://build.nvidia.com" target="_blank">build.nvidia.com</a>. Used automatically if Gemini hits its rate limit.</p>
+    <input id="nimKey" type="password" placeholder="nvapi-…" autocomplete="off" />
+  </section>
+
+  <section>
+    <label for="resume">Base resume (JSON)</label>
+    <p class="hint">
+      Shape: <code>{name, contact:{email,phone,location,links}, summary, skills[], experience[{title,company,dates,bullets[]}], education[{degree,school,dates}], projects[{name,description}]}</code>
+    </p>
+    <textarea id="resume" spellcheck="false" placeholder='{"name": "...", ...}'></textarea>
+    <div id="jsonError"></div>
+  </section>
+
+  <button id="save">Save</button>
+  <span id="savedMsg">Saved ✓</span>
+
+  <script src="options.js"></script>
+</body>
+</html>

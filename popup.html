@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    width: 340px;
+    margin: 0;
+    padding: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 {
+    font-size: 15px;
+    margin: 0 0 4px;
+  }
+  .sub { color: #666; margin: 0 0 16px; font-size: 12px; }
+  button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #111;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s ease;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.secondary { background: #f2f2f2; color: #111; }
+  .score {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 8px 0 2px;
+  }
+  .section { margin-top: 14px; }
+  .section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #888; margin: 0 0 6px; }
+  ul { margin: 0; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  .status { color: #888; font-size: 12px; margin-top: 10px; text-align: center; }
+  .error { color: #c0392b; font-size: 12px; margin-top: 10px; }
+  .hidden { display: none; }
+  a { color: #111; }
+</style>
+</head>
+<body>
+  <h1>JobAppy</h1>
+  <p class="sub">Tailor your resume to the page you're on.</p>
+
+  <div id="setupPrompt" class="hidden">
+    <p>Add your API keys and base resume to get started.</p>
+    <button id="openSetup">Finish setup</button>
+  </div>
+
+  <div id="main" class="hidden">
+    <button id="analyzeBtn">Analyze fit</button>
+    <div id="result" class="hidden">
+      <div class="score" id="scoreText"></div>
+      <div class="section">
+        <h2>Strengths</h2>
+        <ul id="strengths"></ul>
+      </div>
+      <div class="section">
+        <h2>Gaps</h2>
+        <ul id="gaps"></ul>
+      </div>
+      <button id="tailorBtn" class="secondary">Generate tailored PDF</button>
+    </div>
+  </div>
+
+  <div id="status" class="status hidden"></div>
+  <div id="error" class="error hidden"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
