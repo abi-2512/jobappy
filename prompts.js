@@ -7,6 +7,16 @@ const NEVER_FABRICATE =
   "either leave it qualitative or reuse a number already present elsewhere for the " +
   "same achievement — do not make one up.";
 
+// This runs against small/weak fallback models (e.g. Gemini Flash-Lite, a
+// 70B NIM model) as well as strong ones, so the output-format rules are
+// spelled out plainly rather than assumed.
+const STRICT_JSON_OUTPUT =
+  "Output rules: respond with raw JSON only. Do not wrap it in ```json or any " +
+  "other markdown code fence. Do not add any sentence before or after the JSON, " +
+  "not even a summary. The first character of your response must be { and the " +
+  "last character must be }. Use double quotes for all keys and string values, " +
+  "and no trailing commas.";
+
 function buildAnalyzePrompt(jobText, resume) {
   return `You are a meticulous hiring-manager-style resume analyst.
 
@@ -26,8 +36,10 @@ Given a job posting and a candidate resume (as JSON), do all of the following:
 
 ${NEVER_FABRICATE}
 
-Respond with ONLY minified JSON matching exactly this shape, no prose outside it:
-{"fitScore":0,"keywords":{"essentialSkills":[{"term":"","status":"present|weak|missing","note":""}],"preferredSkills":[...],"industryKeywords":[...]},"strengths":["",""],"gaps":["",""]}
+${STRICT_JSON_OUTPUT}
+
+Your JSON must match exactly this shape (types shown, fill in real values):
+{"fitScore":0,"keywords":{"essentialSkills":[{"term":"","status":"present|weak|missing","note":""}],"preferredSkills":[{"term":"","status":"present|weak|missing","note":""}],"industryKeywords":[{"term":"","status":"present|weak|missing","note":""}]},"strengths":["",""],"gaps":["",""]}
 
 JOB POSTING:
 """
@@ -41,20 +53,27 @@ ${JSON.stringify(resume)}
 }
 
 function buildTailorPrompt(jobText, resume) {
+  const untouchedKeys = Object.keys(resume).filter((k) => k !== "summary" && k !== "skills");
+
   return `You are rewriting a resume to better match a specific job posting.
 
 Rewrite ONLY these fields: summary, skills, and each experience[].bullets entry.
-Do not add, remove, or reorder experience entries, education, projects, name,
-or contact info. Mirror the job posting's terminology where truthful. Keep
-bullets in the form: accomplished [impact] as measured by [number] by doing
-[specific contribution] — reuse existing numbers, never fabricate new ones.
-Drop skills from the skills list only if they're clearly unrelated to this role;
-never add a skill that isn't already in the original resume.
+Every other top-level field must be copied through byte-for-byte unchanged:
+${untouchedKeys.map((k) => `"${k}"`).join(", ")}. Do not add, remove, or reorder
+anything in those fields — no dropped entries, no renamed keys, no shortened
+arrays. Mirror the job posting's terminology where truthful. Keep bullets in
+the form: accomplished [impact] as measured by [number] by doing [specific
+contribution] — reuse existing numbers, never fabricate new ones. Drop skills
+from the skills list only if they're clearly unrelated to this role; never add
+a skill that isn't already in the original resume.
 
 ${NEVER_FABRICATE}
 
-Respond with ONLY the full resume JSON, same shape as given, with summary/skills/
-experience[].bullets updated. No prose outside the JSON.
+${STRICT_JSON_OUTPUT}
+
+Your response must be the complete resume JSON, with the exact same top-level
+keys as the original (${Object.keys(resume).map((k) => `"${k}"`).join(", ")}),
+only summary/skills/experience[].bullets updated.
 
 JOB POSTING:
 """

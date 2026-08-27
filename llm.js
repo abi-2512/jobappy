@@ -36,7 +36,8 @@ async function callNim(apiKey, prompt) {
     body: JSON.stringify({
       model: NIM_MODEL,
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.3
+      temperature: 0.3,
+      response_format: { type: "json_object" }
     })
   });
   if (!res.ok) {
