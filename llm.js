@@ -95,7 +95,13 @@ async function callLLM(prompt, { geminiKey, nimKey }) {
     }
   }
   if (!nimKey) throw lastError;
-  return extractJson(await callNim(nimKey, prompt));
+  try {
+    return extractJson(await callNim(nimKey, prompt));
+  } catch (nimError) {
+    // Don't let NIM's failure hide why Gemini also failed before it.
+    if (lastError) nimError.message = `${nimError.message} (Gemini also failed: ${lastError.message})`;
+    throw nimError;
+  }
 }
 
 export { callLLM };
