@@ -13,12 +13,13 @@ const CATALOG_PACKAGES = [
 
 let runnerPromise;
 
-function getRunner() {
+function getRunner(onProgress) {
   if (!runnerPromise) {
     const runner = new BusyTexRunner({
       busytexBasePath: BUSYTEX_BASE,
       engineMode: "combined",
-      catalogDataPackages: CATALOG_PACKAGES
+      catalogDataPackages: CATALOG_PACKAGES,
+      onDownloadProgress: onProgress
     });
     // Everything is same-origin now, so the engine can run in its own Worker
     // (non-blocking) instead of the direct/main-thread mode the CDN approach
@@ -28,8 +29,8 @@ function getRunner() {
   return runnerPromise;
 }
 
-async function compileResumeTex(texSource) {
-  const runner = await getRunner();
+async function compileResumeTex(texSource, onProgress = () => {}) {
+  const runner = await getRunner(onProgress);
   const pdflatex = new PdfLatex(runner);
   const result = await pdflatex.compile({ input: texSource, verbose: "info" });
   if (!result.success || !result.pdf) {
