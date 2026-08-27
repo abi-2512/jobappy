@@ -1,5 +1,5 @@
 const GEMINI_MODEL = "gemini-flash-latest";
-const NIM_MODEL = "qwen/qwen2.5-72b-instruct";
+const NIM_MODEL = "meta/llama-3.3-70b-instruct";
 
 async function callGemini(apiKey, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;

@@ -21,7 +21,7 @@ Keys and your resume are stored only in `chrome.storage.local` on your machine, 
 ## Models
 
 - Primary: **Gemini 2.5 Flash** (best free-tier headroom of Gemini's models: 10 requests/min, 500/day).
-- Fallback on 429: **NVIDIA NIM — `qwen2.5-72b-instruct`** (~40 requests/min free tier, strong at rewriting/summarization tasks).
+- Fallback on 429/503: **NVIDIA NIM — `meta/llama-3.3-70b-instruct`** (~40 requests/min free tier).
 
 ## Files
 
