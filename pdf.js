@@ -9,7 +9,10 @@ async function compileResumeTex(texSource) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      compiler: "pdflatex",
+      // xelatex over pdflatex: handles UTF-8/Unicode (emoji, symbols a user's
+      // resume text might contain) natively instead of rendering an unknown
+      // glyph as a tofu box.
+      compiler: "xelatex",
       resources: [{ main: true, content: texSource }]
     })
   });

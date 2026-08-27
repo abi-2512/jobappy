@@ -14,7 +14,14 @@ const SAMPLE_RESUME = {
     }
   ],
   education: [{ degree: "B.S. Computer Science", school: "State University", dates: "2018 – 2022" }],
-  projects: []
+  projects: [
+    {
+      name: "Side Project",
+      techStack: "Python, FastAPI",
+      dates: "2023",
+      bullets: ["Built a small tool to automate a personal workflow"]
+    }
+  ]
 };
 
 async function load() {

@@ -35,8 +35,20 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
     .join(" \\\\[3pt]\n");
 
   const projects = (resume.projects || [])
-    .map((p) => `\\textbf{${escapeTex(p.name)}} — ${escapeTex(p.description)}`)
-    .join(" \\\\[2pt]\n");
+    .map((p) => {
+      const titleLine = p.techStack
+        ? `\\textbf{${escapeTex(p.name)}} \\textit{| ${escapeTex(p.techStack)}}`
+        : `\\textbf{${escapeTex(p.name)}}`;
+      const bullets = (p.bullets || []).length
+        ? `\n\\vspace{-2pt}\n\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=2pt, parsep=0pt]\n${(
+            p.bullets || []
+          )
+            .map((b) => `  \\item ${escapeTex(b)}`)
+            .join("\n")}\n\\end{itemize}`
+        : "";
+      return `${titleLine} \\hfill \\textit{${escapeTex(p.dates)}}${bullets}`;
+    })
+    .join("\n\\vspace{2pt}\n");
 
   return `\\documentclass[10pt]{article}
 \\usepackage[margin=0.5in]{geometry}

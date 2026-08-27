@@ -103,29 +103,30 @@ function buildTailorPrompt(jobText, resume) {
 
 You will output ONLY a diff: a rewritten summary, a rewritten skills list,
 rewritten bullets for each of the ${experienceCount} experience entries below,
-${projectCount ? `and a rewritten description for each of the ${projectCount} project entries below, ` : ""}all in the same order they're given (do not add, remove, or reorder any
+${projectCount ? `and rewritten bullets for each of the ${projectCount} project entries below, ` : ""}all in the same order they're given (do not add, remove, or reorder any
 entries). Nothing else about the resume is being changed by you; do not
 mention or restate any other field — job titles, companies, dates, project
-names, education, and contact info all stay exactly as given, untouched.
+names, tech stacks, education, and contact info all stay exactly as given,
+untouched.
 
 Mirror the job posting's terminology where truthful. Rewrite each bullet
-and project description to lead with a strong action verb, state the
+(experience and project alike) to lead with a strong action verb, state the
 concrete contribution, and work in any existing metric naturally, as a
 normal sentence would, not a fill-in-the-blank template. Reuse existing
 numbers, never fabricate new ones. Vary sentence structure so they don't all
 read the same way — do not reuse the same connecting phrase (e.g. "as
-measured by") in more than one bullet/description; most shouldn't use it at
-all. Bad: "Reduced latency by 5x as measured by benchmark metrics by
-migrating routing." Good: "Cut inference latency 5x by migrating request
-routing to a distributed GPU compute network." Drop skills from the skills
-list only if they're clearly unrelated to this role; never add a skill that
-isn't already in the original resume.
+measured by") in more than one bullet; most shouldn't use it at all. Bad:
+"Reduced latency by 5x as measured by benchmark metrics by migrating
+routing." Good: "Cut inference latency 5x by migrating request routing to a
+distributed GPU compute network." Drop skills from the skills list only if
+they're clearly unrelated to this role; never add a skill that isn't already
+in the original resume.
 
 ${NEVER_FABRICATE}
 
 ${STRICT_JSON_OUTPUT}
 
-Your JSON must match exactly this shape: {"summary":"","skills":["",""],"experience":[{"bullets":["",""]},...]${projectCount ? `,"projects":[{"description":""},...]` : ""}}
+Your JSON must match exactly this shape: {"summary":"","skills":["",""],"experience":[{"bullets":["",""]},...]${projectCount ? `,"projects":[{"bullets":["",""]},...]` : ""}}
 The "experience" array must have exactly ${experienceCount} entries${projectCount ? `, and "projects" exactly ${projectCount} entries,` : ""} in the same order as below.
 
 JOB POSTING:
@@ -169,8 +170,8 @@ function buildTailorSchema(resume) {
       maxItems: projectCount,
       items: {
         type: "OBJECT",
-        properties: { description: { type: "STRING" } },
-        required: ["description"]
+        properties: { bullets: { type: "ARRAY", items: { type: "STRING" } } },
+        required: ["bullets"]
       }
     };
     schema.required.push("projects");
@@ -180,9 +181,10 @@ function buildTailorSchema(resume) {
 }
 
 // Applies the model's {summary, skills, experience[].bullets,
-// projects[].description} diff onto the original resume. Every other field
-// (contact, education, job titles/companies/dates, project names, ...)
-// always comes from the original, never the model's output.
+// projects[].bullets} diff onto the original resume. Every other field
+// (contact, education, job titles/companies/dates, project names/tech
+// stacks/dates, ...) always comes from the original, never the model's
+// output.
 function applyTailorDiff(resume, diff) {
   return {
     ...resume,
@@ -194,7 +196,7 @@ function applyTailorDiff(resume, diff) {
     })),
     projects: (resume.projects || []).map((p, i) => ({
       ...p,
-      description: diff.projects?.[i]?.description ?? p.description
+      bullets: diff.projects?.[i]?.bullets ?? p.bullets
     }))
   };
 }
