@@ -36,9 +36,12 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
 
   const projects = (resume.projects || [])
     .map((p) => {
-      const titleLine = p.techStack
-        ? `\\textbf{${escapeTex(p.name)}} \\textit{| ${escapeTex(p.techStack)}}`
-        : `\\textbf{${escapeTex(p.name)}}`;
+      // Accept either key naming: {name, techStack} or {title, tech}.
+      const projName = p.name ?? p.title;
+      const projTech = p.techStack ?? p.tech;
+      const titleLine = projTech
+        ? `\\textbf{${escapeTex(projName)}} \\textit{| ${escapeTex(projTech)}}`
+        : `\\textbf{${escapeTex(projName)}}`;
       const bullets = (p.bullets || []).length
         ? `\n\\vspace{-2pt}\n\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=2pt, parsep=0pt]\n${(
             p.bullets || []
