@@ -20,7 +20,7 @@ Keys and your resume are stored only in `chrome.storage.local` on your machine, 
 
 ## Models
 
-- Primary: **Gemini 2.5 Flash** (best free-tier headroom of Gemini's models: 10 requests/min, 500/day).
+- Primary: **`gemini-flash-latest`**, falling back to **`gemini-2.5-flash-lite`** (separate model pool, less likely to be overloaded at the same time) on 429/503.
 - Fallback on 429/503: **NVIDIA NIM — `nvidia/llama-3.1-nemotron-70b-instruct`** (~40 requests/min free tier). If NVIDIA retires this model too, check the live catalog at `https://integrate.api.nvidia.com/v1/models` (no auth needed) and swap `NIM_MODEL` in `llm.js`.
 
 ## Files

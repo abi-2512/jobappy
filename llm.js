@@ -1,8 +1,11 @@
-const GEMINI_MODEL = "gemini-flash-latest";
+// Tried in order on 429/503 before falling through to NIM. Two separate model
+// pools (the rolling "latest" alias vs. a distinct stable model) so a demand
+// spike on one doesn't necessarily hit the other.
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash-lite"];
 const NIM_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct";
 
-async function callGemini(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+async function callGemini(apiKey, prompt, model) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -13,7 +16,7 @@ async function callGemini(apiKey, prompt) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    const err = new Error(`Gemini error ${res.status}: ${body.slice(0, 300)}`);
+    const err = new Error(`Gemini (${model}) error ${res.status}: ${body.slice(0, 300)}`);
     err.status = res.status;
     throw err;
   }
@@ -55,22 +58,26 @@ function extractJson(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
-// Gemini is rate-limited (429) or temporarily overloaded (503): both are worth
-// retrying against NIM instead of failing outright.
+// Rate-limited (429) or temporarily overloaded (503): worth retrying against
+// the next model/provider instead of failing outright.
 const FALLBACK_STATUSES = new Set([429, 503]);
 
-// Tries Gemini first; falls back to NIM on rate-limit/overload (or if only NIM is configured).
+// Tries each Gemini model in order, then NIM, on rate-limit/overload.
 async function callLLM(prompt, { geminiKey, nimKey }) {
   if (!geminiKey && !nimKey) throw new Error("No API keys configured. Open Setup to add one.");
 
+  let lastError;
   if (geminiKey) {
-    try {
-      return extractJson(await callGemini(geminiKey, prompt));
-    } catch (e) {
-      if (!FALLBACK_STATUSES.has(e.status) || !nimKey) throw e;
-      // fall back to NIM
+    for (const model of GEMINI_MODELS) {
+      try {
+        return extractJson(await callGemini(geminiKey, prompt, model));
+      } catch (e) {
+        if (!FALLBACK_STATUSES.has(e.status)) throw e;
+        lastError = e;
+      }
     }
   }
+  if (!nimKey) throw lastError;
   return extractJson(await callNim(nimKey, prompt));
 }
 
