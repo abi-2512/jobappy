@@ -1,7 +1,7 @@
 // Tried in order on 429/503 before falling through to NIM. Two separate model
 // pools (the rolling "latest" alias vs. a distinct stable model) so a demand
 // spike on one doesn't necessarily hit the other.
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash-lite"];
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite"];
 const NIM_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct";
 
 async function callGemini(apiKey, prompt, model) {
