@@ -3,17 +3,24 @@ const $ = (id) => document.getElementById(id);
 const SAMPLE_RESUME = {
   name: "Jane Doe",
   contact: { email: "jane@example.com", phone: "555-0100", location: "Remote", links: "linkedin.com/in/janedoe" },
-  summary: "Software engineer with 5 years building backend systems.",
-  skills: ["Python", "PostgreSQL", "AWS"],
+  workAuth: "Authorized to work in the U.S.",
+  skills: {
+    Languages: ["Python", "SQL"],
+    "Frameworks & Tools": ["FastAPI", "PostgreSQL", "AWS", "Docker"],
+    Concepts: ["Distributed Systems", "REST APIs"]
+  },
   experience: [
     {
       title: "Software Engineer",
       company: "Acme Corp",
+      location: "Remote",
       dates: "2022 – Present",
       bullets: ["Reduced API latency by 30% by rewriting the caching layer"]
     }
   ],
-  education: [{ degree: "B.S. Computer Science", school: "State University", dates: "2018 – 2022" }],
+  education: [
+    { school: "State University", degree: "B.S. Computer Science", location: "State, USA", dates: "2018 – 2022" }
+  ],
   projects: [
     {
       name: "Side Project",

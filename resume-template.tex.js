@@ -6,6 +6,13 @@ function escapeTex(s = "") {
     .replace(/\^/g, "\\textasciicircum{}");
 }
 
+// row(left, right): a bold/italic-left, italic-right line pair used for
+// experience/education/project headers — mirrors the master resume's
+// layout (title+dates on one line, company/school+location on the next).
+function row(left, right) {
+  return `${left} \\hfill \\textit{${escapeTex(right)}}`;
+}
+
 function buildTex(resume) {
   const contact = resume.contact || {};
   const contactLine = [contact.email, contact.phone, contact.location, contact.links]
@@ -16,8 +23,8 @@ function buildTex(resume) {
   const experience = (resume.experience || [])
     .map(
       (job) => `
-\\textbf{${escapeTex(job.title)}} \\hfill \\textit{${escapeTex(job.dates)}} \\\\
-\\textit{${escapeTex(job.company)}}
+${row(`\\textbf{${escapeTex(job.title)}}`, job.dates)} \\\\
+${row(`\\textit{${escapeTex(job.company)}}`, job.location)}
 \\vspace{-2pt}
 \\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=2pt, parsep=0pt]
 ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
@@ -25,14 +32,18 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
     )
     .join("\n\\vspace{2pt}\n");
 
+  // school+location on the first line, degree+dates on the second — matches
+  // the master resume's order (school is the identifying line, like a job
+  // title is for experience).
   const education = (resume.education || [])
     .map(
       (ed) =>
-        `\\textbf{${escapeTex(ed.degree)}} \\hfill \\textit{${escapeTex(ed.dates)}} \\\\ \\textit{${escapeTex(
-          ed.school
-        )}}`
+        `${row(`\\textbf{${escapeTex(ed.school)}}`, ed.location)} \\\\\n${row(
+          `\\textit{${escapeTex(ed.degree)}}`,
+          ed.dates
+        )}`
     )
-    .join(" \\\\[3pt]\n");
+    .join(" \\\\[4pt]\n");
 
   const projects = (resume.projects || [])
     .map((p) => {
@@ -49,37 +60,41 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
             .map((b) => `  \\item ${escapeTex(b)}`)
             .join("\n")}\n\\end{itemize}`
         : "";
-      return `${titleLine} \\hfill \\textit{${escapeTex(p.dates)}}${bullets}`;
+      return `${row(titleLine, p.dates)}${bullets}`;
     })
     .join("\n\\vspace{2pt}\n");
+
+  // skills: {"Languages": ["Python", ...], "Frameworks & Tools": [...], ...}
+  // — one bold-labeled line per category, in whatever order the object has.
+  const skillLines = Object.entries(resume.skills || {})
+    .map(([label, items]) => `\\textbf{${escapeTex(label)}}: ${(items || []).map(escapeTex).join(", ")}`)
+    .join(" \\\\\n");
+
+  const workAuthLine = resume.workAuth ? `\n{\\small ${escapeTex(resume.workAuth)}}\\\\` : "";
 
   return `\\documentclass[10pt]{article}
 \\usepackage[margin=0.5in]{geometry}
 \\usepackage{enumitem}
 \\usepackage{titlesec}
-\\usepackage{xcolor}
 \\usepackage[hidelinks]{hyperref}
-\\definecolor{accent}{HTML}{1F3A5F}
 \\pagestyle{empty}
-\\titleformat{\\section}{\\color{accent}\\normalsize\\bfseries\\scshape}{}{0em}{}[\\color{accent}\\titlerule]
+\\titleformat{\\section}{\\normalsize\\bfseries\\scshape}{}{0em}{}[\\titlerule]
 \\titlespacing{\\section}{0pt}{6pt}{3pt}
 \\setlength{\\parindent}{0pt}
 
 \\begin{document}
-
-{\\LARGE\\bfseries\\color{accent} ${escapeTex(resume.name)}}\\\\[3pt]
-{\\small ${contactLine}}
-
-\\section*{Summary}
-${escapeTex(resume.summary)}
-
-\\section*{Skills}
-${(resume.skills || []).map(escapeTex).join(" \\textbullet\\ ")}
+\\begin{center}
+{\\LARGE\\bfseries ${escapeTex(resume.name)}}\\\\[3pt]
+{\\small ${contactLine}}\\\\${workAuthLine}
+\\end{center}
 
 \\section*{Experience}
 ${experience}
 
 ${projects ? `\\section*{Projects}\n${projects}\n` : ""}
+\\section*{Technical Skills}
+${skillLines}
+
 \\section*{Education}
 ${education}
 

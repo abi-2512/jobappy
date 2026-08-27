@@ -86,28 +86,31 @@ ${JSON.stringify(resume)}
 """`;
 }
 
-// The model returns ONLY the changed parts (summary/skills/each experience
-// entry's bullets, positionally aligned to the original experience array) —
-// never the full resume. Code (background.js) applies this as a diff onto
-// the original JSON. This is deliberate: an earlier version asked the model
-// to return the complete resume JSON with instructions to copy untouched
-// fields (contact, education, projects, ...) through unchanged, and in
-// practice the model didn't reliably do that — a real generated PDF came
-// back with the projects section silently blanked out. A model can't
-// corrupt data it was never given the chance to touch.
+// The model returns ONLY the changed parts (each experience entry's bullets
+// and each project entry's bullets, positionally aligned to the original
+// arrays) — never the full resume. Code (background.js) applies this as a
+// diff onto the original JSON. This is deliberate: an earlier version asked
+// the model to return the complete resume JSON with instructions to copy
+// untouched fields (contact, education, projects, ...) through unchanged,
+// and in practice the model didn't reliably do that — a real generated PDF
+// came back with the projects section silently blanked out. A model can't
+// corrupt data it's never given the chance to touch. Same reasoning is why
+// `skills` isn't part of the diff either: it's structured category data
+// (`{label: items[]}`), not prose, and there's nothing about it a model
+// needs to rewrite to match a JD the way bullet phrasing does.
 function buildTailorPrompt(jobText, resume) {
   const experienceCount = (resume.experience || []).length;
   const projectCount = (resume.projects || []).length;
 
   return `You are rewriting parts of a resume to better match a specific job posting.
 
-You will output ONLY a diff: a rewritten summary, a rewritten skills list,
-rewritten bullets for each of the ${experienceCount} experience entries below,
-${projectCount ? `and rewritten bullets for each of the ${projectCount} project entries below, ` : ""}all in the same order they're given (do not add, remove, or reorder any
+You will output ONLY a diff: rewritten bullets for each of the
+${experienceCount} experience entries below${projectCount ? `, and rewritten bullets for each of the ${projectCount} project entries below` : ""},
+all in the same order they're given (do not add, remove, or reorder any
 entries). Nothing else about the resume is being changed by you; do not
-mention or restate any other field — job titles, companies, dates, project
-names, tech stacks, education, and contact info all stay exactly as given,
-untouched.
+mention or restate any other field — job titles, companies, dates,
+locations, project names, tech stacks, skills, education, and contact info
+all stay exactly as given, untouched.
 
 Mirror the job posting's terminology where truthful. Rewrite each bullet
 (experience and project alike) to lead with a strong action verb, state the
@@ -118,15 +121,13 @@ read the same way — do not reuse the same connecting phrase (e.g. "as
 measured by") in more than one bullet; most shouldn't use it at all. Bad:
 "Reduced latency by 5x as measured by benchmark metrics by migrating
 routing." Good: "Cut inference latency 5x by migrating request routing to a
-distributed GPU compute network." Drop skills from the skills list only if
-they're clearly unrelated to this role; never add a skill that isn't already
-in the original resume.
+distributed GPU compute network."
 
 ${NEVER_FABRICATE}
 
 ${STRICT_JSON_OUTPUT}
 
-Your JSON must match exactly this shape: {"summary":"","skills":["",""],"experience":[{"bullets":["",""]},...]${projectCount ? `,"projects":[{"bullets":["",""]},...]` : ""}}
+Your JSON must match exactly this shape: {"experience":[{"bullets":["",""]},...]${projectCount ? `,"projects":[{"bullets":["",""]},...]` : ""}}
 The "experience" array must have exactly ${experienceCount} entries${projectCount ? `, and "projects" exactly ${projectCount} entries,` : ""} in the same order as below.
 
 JOB POSTING:
@@ -147,8 +148,6 @@ function buildTailorSchema(resume) {
   const schema = {
     type: "OBJECT",
     properties: {
-      summary: { type: "STRING" },
-      skills: { type: "ARRAY", items: { type: "STRING" } },
       experience: {
         type: "ARRAY",
         minItems: experienceCount,
@@ -160,7 +159,7 @@ function buildTailorSchema(resume) {
         }
       }
     },
-    required: ["summary", "skills", "experience"]
+    required: ["experience"]
   };
 
   if (projectCount) {
@@ -180,16 +179,13 @@ function buildTailorSchema(resume) {
   return schema;
 }
 
-// Applies the model's {summary, skills, experience[].bullets,
-// projects[].bullets} diff onto the original resume. Every other field
-// (contact, education, job titles/companies/dates, project names/tech
-// stacks/dates, ...) always comes from the original, never the model's
-// output.
+// Applies the model's {experience[].bullets, projects[].bullets} diff onto
+// the original resume. Every other field (contact, education, skills, job
+// titles/companies/dates/locations, project names/tech stacks/dates, ...)
+// always comes from the original, never the model's output.
 function applyTailorDiff(resume, diff) {
   return {
     ...resume,
-    summary: diff.summary ?? resume.summary,
-    skills: diff.skills ?? resume.skills,
     experience: (resume.experience || []).map((job, i) => ({
       ...job,
       bullets: diff.experience?.[i]?.bullets ?? job.bullets

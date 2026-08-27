@@ -66,7 +66,7 @@
   <section>
     <label for="resume">Base resume (JSON)</label>
     <p class="hint">
-      Shape: <code>{name, contact:{email,phone,location,links}, summary, skills[], experience[{title,company,dates,bullets[]}], education[{degree,school,dates}], projects[{name,techStack,dates,bullets[]}]}</code>
+      Shape: <code>{name, contact:{email,phone,location,links}, workAuth?, skills:{"Category Label":["item",...],...}, experience[{title,company,location,dates,bullets[]}], education[{school,degree,location,dates}], projects[{name,techStack,dates,bullets[]}]}</code>. <code>title</code>/<code>tech</code> are also accepted for project name/techStack.
     </p>
     <textarea id="resume" spellcheck="false" placeholder='{"name": "...", ...}'></textarea>
     <div id="jsonError"></div>
