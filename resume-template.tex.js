@@ -25,12 +25,12 @@ function buildTex(resume) {
       (job) => `
 ${row(`\\textbf{${escapeTex(job.title)}}`, job.dates)} \\\\
 ${row(`\\textit{${escapeTex(job.company)}}`, job.location)}
-\\vspace{-2pt}
-\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=2pt, parsep=0pt]
+\\vspace{-3pt}
+\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=1pt, parsep=0pt]
 ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
 \\end{itemize}`
     )
-    .join("\n\\vspace{2pt}\n");
+    .join("\n\\vspace{1pt}\n");
 
   // school+location on the first line, degree+dates on the second — matches
   // the master resume's order (school is the identifying line, like a job
@@ -43,7 +43,7 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
           ed.dates
         )}`
     )
-    .join(" \\\\[4pt]\n");
+    .join(" \\\\[2pt]\n");
 
   const projects = (resume.projects || [])
     .map((p) => {
@@ -54,7 +54,7 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
         ? `\\textbf{${escapeTex(projName)}} \\textit{| ${escapeTex(projTech)}}`
         : `\\textbf{${escapeTex(projName)}}`;
       const bullets = (p.bullets || []).length
-        ? `\n\\vspace{-2pt}\n\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=2pt, parsep=0pt]\n${(
+        ? `\n\\vspace{-3pt}\n\\begin{itemize}[leftmargin=1.1em, itemsep=0pt, topsep=1pt, parsep=0pt]\n${(
             p.bullets || []
           )
             .map((b) => `  \\item ${escapeTex(b)}`)
@@ -62,7 +62,7 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
         : "";
       return `${row(titleLine, p.dates)}${bullets}`;
     })
-    .join("\n\\vspace{2pt}\n");
+    .join("\n\\vspace{1pt}\n");
 
   // skills: {"Languages": ["Python", ...], "Frameworks & Tools": [...], ...}
   // — one bold-labeled line per category, in whatever order the object has.
@@ -73,20 +73,22 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
   const workAuthLine = resume.workAuth ? `\n{\\small ${escapeTex(resume.workAuth)}}\\\\` : "";
 
   return `\\documentclass[10pt]{article}
-\\usepackage[margin=0.5in]{geometry}
+\\usepackage[margin=0.45in]{geometry}
 \\usepackage{enumitem}
 \\usepackage{titlesec}
 \\usepackage[hidelinks]{hyperref}
+\\linespread{0.96}
 \\pagestyle{empty}
 \\titleformat{\\section}{\\normalsize\\bfseries\\scshape}{}{0em}{}[\\titlerule]
-\\titlespacing{\\section}{0pt}{6pt}{3pt}
+\\titlespacing{\\section}{0pt}{4pt}{2pt}
 \\setlength{\\parindent}{0pt}
 
 \\begin{document}
 \\begin{center}
-{\\LARGE\\bfseries ${escapeTex(resume.name)}}\\\\[3pt]
+{\\LARGE\\bfseries ${escapeTex(resume.name)}}\\\\[2pt]
 {\\small ${contactLine}}\\\\${workAuthLine}
 \\end{center}
+\\vspace{-4pt}
 
 \\section*{Experience}
 ${experience}
