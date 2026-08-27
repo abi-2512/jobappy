@@ -46,7 +46,7 @@ ${(job.bullets || []).map((b) => `  \\item ${escapeTex(b)}`).join("\n")}
 \\usepackage[hidelinks]{hyperref}
 \\definecolor{accent}{HTML}{1F3A5F}
 \\pagestyle{empty}
-\\titleformat{\\section}{\\color{accent}\\normalsize\\bfseries\\MakeUppercase}{}{0em}{}[\\color{accent}\\titlerule]
+\\titleformat{\\section}{\\color{accent}\\normalsize\\bfseries\\scshape}{}{0em}{}[\\color{accent}\\titlerule]
 \\titlespacing{\\section}{0pt}{6pt}{3pt}
 \\setlength{\\parindent}{0pt}
 

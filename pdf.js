@@ -1,42 +1,25 @@
-// The engine + TeX Live package data are vendored locally under pdf/busytex/
-// (gitignored, downloaded once via `npx texlyre-busytex download-assets`, see
-// README) rather than loaded from a CDN: Chrome MV3 flatly forbids any
-// non-'self' host in an extension page's script-src, so a cross-origin
-// <script>-loaded engine can never work here, only same-origin.
-import { BusyTexRunner, PdfLatex } from "./texlyre-busytex.js";
+// Compiles LaTeX via https://latex.ytotech.com/builds/sync, a public hosted
+// instance of the open-source latex-on-http project. No local engine, no
+// server of our own. Tradeoff: the resume's text content leaves the machine
+// to a third-party demo service with no SLA — see README.
+const COMPILE_URL = "https://latex.ytotech.com/builds/sync";
 
-const BUSYTEX_BASE = chrome.runtime.getURL("pdf/busytex");
-const CATALOG_PACKAGES = [
-  `${BUSYTEX_BASE}/texlive-basic.js`,
-  `${BUSYTEX_BASE}/texlive-recommended.js`
-];
+async function compileResumeTex(texSource) {
+  const res = await fetch(COMPILE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      compiler: "pdflatex",
+      resources: [{ main: true, content: texSource }]
+    })
+  });
 
-let runnerPromise;
-
-function getRunner(onProgress) {
-  if (!runnerPromise) {
-    const runner = new BusyTexRunner({
-      busytexBasePath: BUSYTEX_BASE,
-      engineMode: "combined",
-      catalogDataPackages: CATALOG_PACKAGES,
-      onDownloadProgress: onProgress
-    });
-    // Everything is same-origin now, so the engine can run in its own Worker
-    // (non-blocking) instead of the direct/main-thread mode the CDN approach
-    // needed to work around cross-origin Worker restrictions.
-    runnerPromise = runner.initialize(true).then(() => runner);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`LaTeX compile failed (${res.status}): ${body.slice(0, 800)}`);
   }
-  return runnerPromise;
-}
 
-async function compileResumeTex(texSource, onProgress = () => {}) {
-  const runner = await getRunner(onProgress);
-  const pdflatex = new PdfLatex(runner);
-  const result = await pdflatex.compile({ input: texSource, verbose: "info" });
-  if (!result.success || !result.pdf) {
-    throw new Error(result.log ? result.log.slice(-1000) : "LaTeX compilation failed");
-  }
-  return result.pdf;
+  return res.arrayBuffer();
 }
 
 export { compileResumeTex };

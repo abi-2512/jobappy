@@ -18,22 +18,7 @@
     padding: 24px;
   }
   #status h1 { font-size: 16px; margin-bottom: 8px; }
-  #progressTrack {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: #eee;
-    margin: 14px 0 6px;
-    overflow: hidden;
-  }
-  #progressBar {
-    height: 100%;
-    width: 4%;
-    border-radius: 3px;
-    background: #1f3a5f;
-    transition: width 0.2s ease;
-  }
-  #elapsed { color: #aaa; font-size: 11px; }
+  #elapsed { color: #aaa; font-size: 11px; margin-top: 10px; }
   #status pre {
     text-align: left;
     background: #f5f5f5;
@@ -51,8 +36,7 @@
 <body>
   <div id="status">
     <h1 id="statusText">Compiling your resume…</h1>
-    <p id="statusSub" style="color:#888; font-size:13px;">First compile of the session loads the LaTeX engine, this can take a little while.</p>
-    <div id="progressTrack"><div id="progressBar"></div></div>
+    <p id="statusSub" style="color:#888; font-size:13px;">Sending it to the LaTeX compile service.</p>
     <div id="elapsed"></div>
     <pre id="statusLog" class="hidden"></pre>
   </div>

@@ -5,7 +5,6 @@ const statusText = document.getElementById("statusText");
 const statusSub = document.getElementById("statusSub");
 const statusLog = document.getElementById("statusLog");
 const statusBox = document.getElementById("status");
-const progressBar = document.getElementById("progressBar");
 const elapsedEl = document.getElementById("elapsed");
 const frame = document.getElementById("pdfFrame");
 
@@ -22,7 +21,6 @@ function fail(title, detail) {
   clearInterval(elapsedTimer);
   statusText.textContent = title;
   statusSub.textContent = "";
-  progressBar.parentElement.classList.add("hidden");
   elapsedEl.classList.add("hidden");
   if (detail) {
     statusLog.textContent = detail;
@@ -40,10 +38,7 @@ async function run() {
 
   try {
     const tex = buildTex(tailoredResume);
-    const pdfBytes = await compileResumeTex(tex, ({ percent }) => {
-      progressBar.style.width = `${Math.max(4, percent)}%`;
-      statusText.textContent = `Loading the LaTeX engine… ${percent}%`;
-    });
+    const pdfBytes = await compileResumeTex(tex);
     clearInterval(elapsedTimer);
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     frame.src = URL.createObjectURL(blob);
