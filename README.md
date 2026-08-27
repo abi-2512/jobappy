@@ -33,6 +33,16 @@ This was chosen over two other options tried in this project's history: bundling
 - Your tailored resume's text content is sent to this third-party service on every PDF generation. It's not your data staying local like the LLM calls and storage are.
 - It's someone's free public demo instance, not an official product with an SLA — it could go down, rate-limit, or disappear without notice. If that happens, either self-host [latex-on-http](https://github.com/YtoTech/latex-on-http) (needs a server) or go back to vendoring a WASM engine locally (see git history around the `texlyre-busytex` commits for that approach).
 
+## dev/ — synthetic test fixtures (not part of the extension)
+
+`dev/generate-larp-fixture.js` is a standalone CLI script for generating synthetic resume-fraud/overfitting test cases, for testing a separate detector — not for real job applications. It's deliberately kept separate from the real extension code: nothing under `dev/` is referenced by `manifest.json`, it has its own prompt (never `prompts.js`), and it runs from the terminal against a fake identity, not `chrome.storage`. Real tailoring (`prompts.js`, used by the extension) never fabricates; this script exists specifically because that one shouldn't.
+
+```
+GEMINI_API_KEY=... node dev/generate-larp-fixture.mjs path/to/jd.txt [base-resume.json]
+```
+
+Outputs `base_resume.json` (ground truth), `larped_resume.json` (a subtle, realistic overfit case against that JD), and `annotations.md` (exactly what was fabricated/inflated and why) to `dev/fixtures/<timestamp>/` — gitignored, regenerate as needed.
+
 ## Files
 
 - `manifest.json` — MV3 extension manifest
