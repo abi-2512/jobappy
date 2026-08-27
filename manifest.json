@@ -12,6 +12,9 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' https://cdn.jsdelivr.net https://texlyre.github.io; object-src 'self'; connect-src 'self' https://cdn.jsdelivr.net https://texlyre.github.io"
+  },
   "action": {
     "default_popup": "popup.html"
   },

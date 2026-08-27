@@ -61,11 +61,19 @@ Rewrite ONLY these fields: summary, skills, and each experience[].bullets entry.
 Every other top-level field must be copied through byte-for-byte unchanged:
 ${untouchedKeys.map((k) => `"${k}"`).join(", ")}. Do not add, remove, or reorder
 anything in those fields — no dropped entries, no renamed keys, no shortened
-arrays. Mirror the job posting's terminology where truthful. Keep bullets in
-the form: accomplished [impact] as measured by [number] by doing [specific
-contribution] — reuse existing numbers, never fabricate new ones. Drop skills
-from the skills list only if they're clearly unrelated to this role; never add
-a skill that isn't already in the original resume.
+arrays. Mirror the job posting's terminology where truthful.
+
+Rewrite each bullet to lead with a strong action verb, state the concrete
+contribution, and work in the existing metric naturally, as a normal sentence
+would, not a fill-in-the-blank template. Reuse existing numbers, never
+fabricate new ones. Vary sentence structure across bullets so they don't all
+read the same way — do not reuse the same connecting phrase (e.g. "as
+measured by") in more than one bullet; most bullets shouldn't use it at all.
+Bad: "Reduced latency by 5x as measured by benchmark metrics by migrating
+routing." Good: "Cut inference latency 5x by migrating request routing to a
+distributed GPU compute network." Drop skills from the skills list only if
+they're clearly unrelated to this role; never add a skill that isn't already
+in the original resume.
 
 ${NEVER_FABRICATE}
 
