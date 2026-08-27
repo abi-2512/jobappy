@@ -1,4 +1,4 @@
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-flash-latest";
 const NIM_MODEL = "qwen/qwen2.5-72b-instruct";
 
 async function callGemini(apiKey, prompt) {
@@ -12,7 +12,8 @@ async function callGemini(apiKey, prompt) {
     })
   });
   if (!res.ok) {
-    const err = new Error(`Gemini error ${res.status}`);
+    const body = await res.text().catch(() => "");
+    const err = new Error(`Gemini error ${res.status}: ${body.slice(0, 300)}`);
     err.status = res.status;
     throw err;
   }
@@ -36,7 +37,8 @@ async function callNim(apiKey, prompt) {
     })
   });
   if (!res.ok) {
-    const err = new Error(`NIM error ${res.status}`);
+    const body = await res.text().catch(() => "");
+    const err = new Error(`NIM error ${res.status}: ${body.slice(0, 300)}`);
     err.status = res.status;
     throw err;
   }
