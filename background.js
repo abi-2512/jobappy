@@ -1,5 +1,11 @@
 import { callLLM } from "./llm.js";
-import { buildAnalyzePrompt, buildTailorPrompt, ANALYZE_SCHEMA } from "./prompts.js";
+import {
+  buildAnalyzePrompt,
+  buildTailorPrompt,
+  buildTailorSchema,
+  applyTailorDiff,
+  ANALYZE_SCHEMA
+} from "./prompts.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
@@ -40,14 +46,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         message.type === "analyze"
           ? buildAnalyzePrompt(message.jobText, resume)
           : buildTailorPrompt(message.jobText, resume);
-      const schema = message.type === "analyze" ? ANALYZE_SCHEMA : undefined;
+      const schema = message.type === "analyze" ? ANALYZE_SCHEMA : buildTailorSchema(resume);
       const result = await callLLM(prompt, { geminiKey, nimKey }, schema);
 
       if (message.type === "tailor") {
+        // Model returns only a diff (summary/skills/bullets); the original
+        // resume owns every other field, so it can't get corrupted by the
+        // model failing to faithfully echo it back.
+        const tailoredResume = applyTailorDiff(resume, result);
+
         // Own opening the PDF tab here, not in popup.js — the popup may
         // already be closed by the time this resolves, and that must not
         // stop the tailored resume from actually reaching a PDF.
-        await chrome.storage.session.set({ tailoredResume: result });
+        await chrome.storage.session.set({ tailoredResume });
         await chrome.tabs.create({ url: chrome.runtime.getURL("preview.html") });
       }
 

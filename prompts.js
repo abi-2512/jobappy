@@ -86,46 +86,117 @@ ${JSON.stringify(resume)}
 """`;
 }
 
+// The model returns ONLY the changed parts (summary/skills/each experience
+// entry's bullets, positionally aligned to the original experience array) —
+// never the full resume. Code (background.js) applies this as a diff onto
+// the original JSON. This is deliberate: an earlier version asked the model
+// to return the complete resume JSON with instructions to copy untouched
+// fields (contact, education, projects, ...) through unchanged, and in
+// practice the model didn't reliably do that — a real generated PDF came
+// back with the projects section silently blanked out. A model can't
+// corrupt data it was never given the chance to touch.
 function buildTailorPrompt(jobText, resume) {
-  const untouchedKeys = Object.keys(resume).filter((k) => k !== "summary" && k !== "skills");
+  const experienceCount = (resume.experience || []).length;
+  const projectCount = (resume.projects || []).length;
 
-  return `You are rewriting a resume to better match a specific job posting.
+  return `You are rewriting parts of a resume to better match a specific job posting.
 
-Rewrite ONLY these fields: summary, skills, and each experience[].bullets entry.
-Every other top-level field must be copied through byte-for-byte unchanged:
-${untouchedKeys.map((k) => `"${k}"`).join(", ")}. Do not add, remove, or reorder
-anything in those fields — no dropped entries, no renamed keys, no shortened
-arrays. Mirror the job posting's terminology where truthful.
+You will output ONLY a diff: a rewritten summary, a rewritten skills list,
+rewritten bullets for each of the ${experienceCount} experience entries below,
+${projectCount ? `and a rewritten description for each of the ${projectCount} project entries below, ` : ""}all in the same order they're given (do not add, remove, or reorder any
+entries). Nothing else about the resume is being changed by you; do not
+mention or restate any other field — job titles, companies, dates, project
+names, education, and contact info all stay exactly as given, untouched.
 
-Rewrite each bullet to lead with a strong action verb, state the concrete
-contribution, and work in the existing metric naturally, as a normal sentence
-would, not a fill-in-the-blank template. Reuse existing numbers, never
-fabricate new ones. Vary sentence structure across bullets so they don't all
+Mirror the job posting's terminology where truthful. Rewrite each bullet
+and project description to lead with a strong action verb, state the
+concrete contribution, and work in any existing metric naturally, as a
+normal sentence would, not a fill-in-the-blank template. Reuse existing
+numbers, never fabricate new ones. Vary sentence structure so they don't all
 read the same way — do not reuse the same connecting phrase (e.g. "as
-measured by") in more than one bullet; most bullets shouldn't use it at all.
-Bad: "Reduced latency by 5x as measured by benchmark metrics by migrating
-routing." Good: "Cut inference latency 5x by migrating request routing to a
-distributed GPU compute network." Drop skills from the skills list only if
-they're clearly unrelated to this role; never add a skill that isn't already
-in the original resume.
+measured by") in more than one bullet/description; most shouldn't use it at
+all. Bad: "Reduced latency by 5x as measured by benchmark metrics by
+migrating routing." Good: "Cut inference latency 5x by migrating request
+routing to a distributed GPU compute network." Drop skills from the skills
+list only if they're clearly unrelated to this role; never add a skill that
+isn't already in the original resume.
 
 ${NEVER_FABRICATE}
 
 ${STRICT_JSON_OUTPUT}
 
-Your response must be the complete resume JSON, with the exact same top-level
-keys as the original (${Object.keys(resume).map((k) => `"${k}"`).join(", ")}),
-only summary/skills/experience[].bullets updated.
+Your JSON must match exactly this shape: {"summary":"","skills":["",""],"experience":[{"bullets":["",""]},...]${projectCount ? `,"projects":[{"description":""},...]` : ""}}
+The "experience" array must have exactly ${experienceCount} entries${projectCount ? `, and "projects" exactly ${projectCount} entries,` : ""} in the same order as below.
 
 JOB POSTING:
 """
 ${jobText}
 """
 
-ORIGINAL RESUME JSON:
+ORIGINAL RESUME JSON (for context — do not repeat it back):
 """
 ${JSON.stringify(resume)}
 """`;
 }
 
-export { buildAnalyzePrompt, buildTailorPrompt, ANALYZE_SCHEMA };
+function buildTailorSchema(resume) {
+  const experienceCount = (resume.experience || []).length;
+  const projectCount = (resume.projects || []).length;
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      summary: { type: "STRING" },
+      skills: { type: "ARRAY", items: { type: "STRING" } },
+      experience: {
+        type: "ARRAY",
+        minItems: experienceCount,
+        maxItems: experienceCount,
+        items: {
+          type: "OBJECT",
+          properties: { bullets: { type: "ARRAY", items: { type: "STRING" } } },
+          required: ["bullets"]
+        }
+      }
+    },
+    required: ["summary", "skills", "experience"]
+  };
+
+  if (projectCount) {
+    schema.properties.projects = {
+      type: "ARRAY",
+      minItems: projectCount,
+      maxItems: projectCount,
+      items: {
+        type: "OBJECT",
+        properties: { description: { type: "STRING" } },
+        required: ["description"]
+      }
+    };
+    schema.required.push("projects");
+  }
+
+  return schema;
+}
+
+// Applies the model's {summary, skills, experience[].bullets,
+// projects[].description} diff onto the original resume. Every other field
+// (contact, education, job titles/companies/dates, project names, ...)
+// always comes from the original, never the model's output.
+function applyTailorDiff(resume, diff) {
+  return {
+    ...resume,
+    summary: diff.summary ?? resume.summary,
+    skills: diff.skills ?? resume.skills,
+    experience: (resume.experience || []).map((job, i) => ({
+      ...job,
+      bullets: diff.experience?.[i]?.bullets ?? job.bullets
+    })),
+    projects: (resume.projects || []).map((p, i) => ({
+      ...p,
+      description: diff.projects?.[i]?.description ?? p.description
+    }))
+  };
+}
+
+export { buildAnalyzePrompt, buildTailorPrompt, buildTailorSchema, applyTailorDiff, ANALYZE_SCHEMA };
