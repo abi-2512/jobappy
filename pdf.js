@@ -1,10 +1,11 @@
-// The engine JS and its WASM/TeX-package data are loaded from public CDNs at
-// compile time; nothing is bundled with the extension. See README for the
-// tradeoffs (requires internet on first compile per session, and leans on
-// texlyre.github.io's demo assets rather than a published stable CDN).
-import { BusyTexRunner, PdfLatex } from "https://cdn.jsdelivr.net/npm/texlyre-busytex@1.4.0/dist/index.js";
+// The engine + TeX Live package data are vendored locally under pdf/busytex/
+// (gitignored, downloaded once via `npx texlyre-busytex download-assets`, see
+// README) rather than loaded from a CDN: Chrome MV3 flatly forbids any
+// non-'self' host in an extension page's script-src, so a cross-origin
+// <script>-loaded engine can never work here, only same-origin.
+import { BusyTexRunner, PdfLatex } from "./texlyre-busytex.js";
 
-const BUSYTEX_BASE = "https://texlyre.github.io/texlyre-busytex/core/busytex";
+const BUSYTEX_BASE = chrome.runtime.getURL("pdf/busytex");
 const CATALOG_PACKAGES = [
   `${BUSYTEX_BASE}/texlive-basic.js`,
   `${BUSYTEX_BASE}/texlive-recommended.js`
@@ -19,10 +20,10 @@ function getRunner() {
       engineMode: "combined",
       catalogDataPackages: CATALOG_PACKAGES
     });
-    // useWorker=false: a cross-origin Worker script (texlyre.github.io, while
-    // this page is chrome-extension://) is blocked by the browser regardless
-    // of CORS, so we run the compiler on the main thread instead.
-    runnerPromise = runner.initialize(false).then(() => runner);
+    // Everything is same-origin now, so the engine can run in its own Worker
+    // (non-blocking) instead of the direct/main-thread mode the CDN approach
+    // needed to work around cross-origin Worker restrictions.
+    runnerPromise = runner.initialize(true).then(() => runner);
   }
   return runnerPromise;
 }
