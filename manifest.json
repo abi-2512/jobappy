@@ -3,7 +3,7 @@
   "name": "JobAppy — Resume Tailor",
   "version": "0.1.0",
   "description": "Tailor your resume to any job posting and export a clean PDF, using free Gemini and NVIDIA NIM keys.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
     "https://integrate.api.nvidia.com/*"
@@ -18,12 +18,5 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ]
+  }
 }

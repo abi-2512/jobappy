@@ -4,10 +4,9 @@ Chrome extension that tailors your resume to whatever job posting you're looking
 
 ## How it works
 
-1. Click **Tailor Resume**, a button injected on any page.
-2. The extension grabs the page's visible text and sends it to Gemini (falling back to NVIDIA NIM if Gemini hits its rate limit) along with your base resume.
-3. Open the extension icon to see your fit score, strengths, and gaps for that posting.
-4. Click **Generate tailored PDF**: the model rewrites your summary, skills, and bullets to match the posting (never inventing employers, dates, or numbers), and opens a print-ready resume in a new tab. Use your browser's print dialog to save it as a PDF.
+1. Open a job posting, then click the extension icon and hit **Analyze fit**.
+2. The extension reads the current tab's visible text and sends it to Gemini (falling back to NVIDIA NIM if Gemini hits its rate limit) along with your base resume, then shows your fit score, strengths, and gaps for that posting.
+3. Click **Generate tailored PDF**: the model rewrites your summary, skills, and bullets to match the posting (never inventing employers, dates, or numbers), and opens a print-ready resume in a new tab. Use your browser's print dialog to save it as a PDF.
 
 ## Setup
 
@@ -27,7 +26,6 @@ Keys and your resume are stored only in `chrome.storage.local` on your machine, 
 ## Files
 
 - `manifest.json` — MV3 extension manifest
-- `content.js` — injects the "Tailor Resume" button, grabs page text
 - `background.js` — service worker, routes analyze/tailor requests to the LLMs
 - `llm.js` — Gemini + NIM API calls with fallback-on-429 logic
 - `prompts.js` — the fit-analysis and tailoring prompts

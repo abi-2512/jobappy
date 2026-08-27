@@ -19,12 +19,6 @@ async function getSettings() {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
-      if (message.type === "saveJobText") {
-        await chrome.storage.session.set({ jobText: message.jobText, jobUrl: message.jobUrl });
-        sendResponse({ ok: true });
-        return;
-      }
-
       const { geminiKey, nimKey, resume } = await getSettings();
       if (!resume) throw new Error("No base resume saved yet. Open Setup first.");
 

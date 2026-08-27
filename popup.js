@@ -12,6 +12,16 @@ function setError(text) {
   $("error").classList.toggle("hidden", !text);
 }
 
+async function grabActiveTabText() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) throw new Error("No active tab found.");
+  const [{ result }] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => document.body.innerText.slice(0, 20000)
+  });
+  return result;
+}
+
 async function init() {
   const { geminiKey, nimKey, resume } = await chrome.storage.local.get([
     "geminiKey",
@@ -23,19 +33,22 @@ async function init() {
   $("setupPrompt").classList.toggle("hidden", !!configured);
   $("main").classList.toggle("hidden", !configured);
   $("openSetup").onclick = () => chrome.runtime.openOptionsPage();
-
-  if (!configured) return;
-
-  const session = await chrome.storage.session.get(["jobText"]);
-  jobText = session.jobText || null;
-  $("analyzeBtn").disabled = !jobText;
-  if (!jobText) setStatus("Click \"Tailor Resume\" on a job page first.");
 }
 
 async function analyze() {
   setError("");
-  setStatus("Analyzing fit…");
+  setStatus("Reading this page…");
   $("analyzeBtn").disabled = true;
+
+  try {
+    jobText = await grabActiveTabText();
+  } catch (e) {
+    $("analyzeBtn").disabled = false;
+    setStatus("");
+    return setError(`Couldn't read this page: ${e.message}`);
+  }
+
+  setStatus("Analyzing fit…");
   const res = await chrome.runtime.sendMessage({ type: "analyze", jobText });
   $("analyzeBtn").disabled = false;
   setStatus("");
