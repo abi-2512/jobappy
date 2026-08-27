@@ -56,14 +56,30 @@ function extractJson(text) {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error("No JSON object found in model output");
-  return JSON.parse(text.slice(start, end + 1));
+  try {
+    return JSON.parse(text.slice(start, end + 1));
+  } catch (e) {
+    // The model itself produced malformed JSON (seen in practice: a missing
+    // colon from a weaker fallback model). Log the full text so it's
+    // inspectable in the service worker console, and surface a snippet in
+    // the thrown error instead of just JSON.parse's opaque message.
+    console.error("[JobAppy] Model returned invalid JSON:", text);
+    const err = new Error(`Model returned invalid JSON (${e.message}): ${text.slice(0, 200)}`);
+    err.invalidJson = true;
+    throw err;
+  }
 }
 
-// Rate-limited (429) or temporarily overloaded (503): worth retrying against
-// the next model/provider instead of failing outright.
+// Rate-limited (429), temporarily overloaded (503), or the model produced
+// malformed JSON: all worth retrying against the next model/provider
+// instead of failing outright.
 const FALLBACK_STATUSES = new Set([429, 503]);
 
-// Tries each Gemini model in order, then NIM, on rate-limit/overload.
+function shouldFallback(e) {
+  return e.invalidJson || FALLBACK_STATUSES.has(e.status);
+}
+
+// Tries each Gemini model in order, then NIM, on rate-limit/overload/bad JSON.
 async function callLLM(prompt, { geminiKey, nimKey }) {
   if (!geminiKey && !nimKey) throw new Error("No API keys configured. Open Setup to add one.");
 
@@ -73,7 +89,7 @@ async function callLLM(prompt, { geminiKey, nimKey }) {
       try {
         return extractJson(await callGemini(geminiKey, prompt, model));
       } catch (e) {
-        if (!FALLBACK_STATUSES.has(e.status)) throw e;
+        if (!shouldFallback(e)) throw e;
         lastError = e;
       }
     }
