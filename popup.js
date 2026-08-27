@@ -76,7 +76,7 @@ async function tailorAndCompile() {
 
   await chrome.storage.session.set({ tailoredResume: res.result });
   await chrome.tabs.create({ url: chrome.runtime.getURL("preview.html") });
-  setStatus("Opened tailored resume in a new tab — use the print dialog to save as PDF.");
+  setStatus("Opened tailored resume in a new tab — compiling your PDF there.");
   $("tailorBtn").disabled = false;
 }
 
