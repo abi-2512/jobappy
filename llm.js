@@ -4,14 +4,16 @@
 const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite"];
 const NIM_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct";
 
-async function callGemini(apiKey, prompt, model) {
+async function callGemini(apiKey, prompt, model, schema) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const generationConfig = { responseMimeType: "application/json" };
+  if (schema) generationConfig.responseSchema = schema;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig
     })
   });
   if (!res.ok) {
@@ -80,14 +82,17 @@ function shouldFallback(e) {
 }
 
 // Tries each Gemini model in order, then NIM, on rate-limit/overload/bad JSON.
-async function callLLM(prompt, { geminiKey, nimKey }) {
+// `schema` (optional): a Gemini responseSchema object, constrains generation
+// to that shape instead of relying on prompt instructions alone. NIM's API
+// doesn't support an equivalent, so it only ever gets json_object mode.
+async function callLLM(prompt, { geminiKey, nimKey }, schema) {
   if (!geminiKey && !nimKey) throw new Error("No API keys configured. Open Setup to add one.");
 
   let lastError;
   if (geminiKey) {
     for (const model of GEMINI_MODELS) {
       try {
-        return extractJson(await callGemini(geminiKey, prompt, model));
+        return extractJson(await callGemini(geminiKey, prompt, model, schema));
       } catch (e) {
         if (!shouldFallback(e)) throw e;
         lastError = e;

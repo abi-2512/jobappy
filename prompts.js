@@ -17,6 +17,40 @@ const STRICT_JSON_OUTPUT =
   "last character must be }. Use double quotes for all keys and string values, " +
   "and no trailing commas.";
 
+// Passed to Gemini as generationConfig.responseSchema so the JSON is
+// constrained at generation time instead of just requested via prompt text.
+// Real bug this fixes: the model would echo JD phrases verbatim into a
+// "note" field, sometimes with an unescaped quote, producing invalid JSON
+// that plain prompt instructions couldn't reliably prevent.
+const keywordItemSchema = {
+  type: "OBJECT",
+  properties: {
+    term: { type: "STRING" },
+    status: { type: "STRING", enum: ["present", "weak", "missing"] },
+    note: { type: "STRING" }
+  },
+  required: ["term", "status", "note"]
+};
+
+const ANALYZE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    fitScore: { type: "INTEGER" },
+    keywords: {
+      type: "OBJECT",
+      properties: {
+        essentialSkills: { type: "ARRAY", items: keywordItemSchema },
+        preferredSkills: { type: "ARRAY", items: keywordItemSchema },
+        industryKeywords: { type: "ARRAY", items: keywordItemSchema }
+      },
+      required: ["essentialSkills", "preferredSkills", "industryKeywords"]
+    },
+    strengths: { type: "ARRAY", items: { type: "STRING" } },
+    gaps: { type: "ARRAY", items: { type: "STRING" } }
+  },
+  required: ["fitScore", "keywords", "strengths", "gaps"]
+};
+
 function buildAnalyzePrompt(jobText, resume) {
   return `You are a meticulous hiring-manager-style resume analyst.
 
@@ -94,4 +128,4 @@ ${JSON.stringify(resume)}
 """`;
 }
 
-export { buildAnalyzePrompt, buildTailorPrompt };
+export { buildAnalyzePrompt, buildTailorPrompt, ANALYZE_SCHEMA };

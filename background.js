@@ -1,5 +1,5 @@
 import { callLLM } from "./llm.js";
-import { buildAnalyzePrompt, buildTailorPrompt } from "./prompts.js";
+import { buildAnalyzePrompt, buildTailorPrompt, ANALYZE_SCHEMA } from "./prompts.js";
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
@@ -40,7 +40,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         message.type === "analyze"
           ? buildAnalyzePrompt(message.jobText, resume)
           : buildTailorPrompt(message.jobText, resume);
-      const result = await callLLM(prompt, { geminiKey, nimKey });
+      const schema = message.type === "analyze" ? ANALYZE_SCHEMA : undefined;
+      const result = await callLLM(prompt, { geminiKey, nimKey }, schema);
 
       if (message.type === "tailor") {
         // Own opening the PDF tab here, not in popup.js — the popup may
