@@ -13,11 +13,28 @@ function row(left, right) {
   return `${left} \\hfill \\textit{${escapeTex(right)}}`;
 }
 
+// Turns a comma-separated string of bare URLs (e.g. "linkedin.com/in/x,
+// github.com/y") into clickable \href links with the visible text unchanged.
+// \usepackage[hidelinks] means they render identically to plain text (no
+// color/border), just clickable.
+function hyperlinkList(s) {
+  return String(s || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((label) => {
+      const url = /^https?:\/\//.test(label) ? label : `https://${label}`;
+      return `\\href{${url}}{${escapeTex(label)}}`;
+    })
+    .join(", ");
+}
+
 function buildTex(resume) {
   const contact = resume.contact || {};
-  const contactLine = [contact.email, contact.phone, contact.location, contact.links]
+  const contactLine = [contact.email, contact.phone, contact.location]
     .filter(Boolean)
     .map(escapeTex)
+    .concat(contact.links ? [hyperlinkList(contact.links)] : [])
     .join(" \\quad|\\quad ");
 
   const experience = (resume.experience || [])
