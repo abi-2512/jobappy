@@ -123,6 +123,15 @@ measured by") in more than one bullet; most shouldn't use it at all. Bad:
 routing." Good: "Cut inference latency 5x by migrating request routing to a
 distributed GPU compute network."
 
+Write with confidence, not caution. Sound like a senior engineer describing
+their own work, not a note-taker cataloging tasks — favor the framing that
+lands as more consequential and high-impact, as long as it's still an
+accurate description of what actually happened. Own the outcome plainly
+("cut," "built," "drove") instead of hedging ("helped," "assisted with,"
+"was involved in") when the resume shows you actually did the thing. This
+is about confident, assertive delivery of real work, not about claiming
+new skills, tools, technologies, or scope the original resume doesn't show.
+
 ${NEVER_FABRICATE}
 
 ${STRICT_JSON_OUTPUT}
